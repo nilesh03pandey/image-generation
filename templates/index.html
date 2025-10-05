@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(to bottom, #1e3a8a, #7c3aed);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Scrollable gallery */
+        #gallery {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        /* Smooth zoom animation */
+        .zoomable {
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .zoomed {
+            transform: scale(2);
+            z-index: 50;
+            position: relative;
+        }
+    </style>
+</head>
+<body class="text-white">
+    <div class="container mx-auto p-4 max-w-lg">
+        <h1 class="text-3xl font-bold text-center mb-6">Image Generator</h1>
+        <form id="generate-form" class="space-y-4">
+            <div>
+                <label for="prompt" class="block text-sm font-medium">Enter Prompt:</label>
+                <textarea id="prompt" name="prompt" rows="4"
+                        class="mt-1 w-full p-3 rounded-md bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 text-lg"
+                        placeholder="enter your prompt...">{{ prompt }}</textarea>
+            </div>
+            <button type="submit"
+                    class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md transition duration-300">
+                Generate Image
+            </button>
+        </form>
+
+        <div id="loading" class="mt-4 text-center hidden">
+            <p class="text-yellow-300 font-semibold">⏳ Generating...</p>
+        </div>
+
+        <div id="latest-image" class="mt-6 hidden">
+            <h2 class="text-xl font-semibold text-center">Latest Generated Image</h2>
+            <img id="result-image" src="" alt="Generated Image" class="mt-2 w-full rounded-md shadow-lg zoomable">
+        </div>
+
+        {% if error %}
+            <p class="mt-4 text-red-400 text-center">{{ error }}</p>
+        {% endif %}
+
+        {% if image_url %}
+            <div class="mt-6">
+                <h2 class="text-xl font-semibold text-center">Latest Generated Image</h2>
+                <img src="{{ image_url }}" alt="Generated Image" class="mt-2 w-full rounded-md shadow-lg zoomable">
+            </div>
+        {% endif %}
+
+        {% if gallery_images %}
+            <div id="gallery-container" class="mt-8 hidden">
+                <h2 class="text-xl font-semibold text-center">Image Gallery</h2>
+                <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 max-h-96 overflow-y-auto pr-2">
+                    {% for img in gallery_images %}
+                        <div class="relative">
+                            <img src="{{ img }}" alt="Gallery Image" class="w-full rounded-md shadow-lg zoomable">
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
+
+
+<script>
+async function fetchGallery() {
+    try {
+        const response = await fetch("/gallery");
+        const data = await response.json();
+
+        const galleryContainer = document.getElementById("gallery-container");
+        const galleryDiv = document.getElementById("gallery");
+        galleryDiv.innerHTML = "";
+
+        if (data.images.length > 0) {
+            galleryContainer.classList.remove("hidden"); // show gallery
+        } else {
+            galleryContainer.classList.add("hidden"); // hide if empty
+        }
+
+        data.images.forEach(img => {
+            const wrapper = document.createElement("div");
+            wrapper.classList.add("relative");
+
+            const imgEl = document.createElement("img");
+            imgEl.src = img;
+            imgEl.classList.add("w-full", "rounded-md", "shadow-lg", "zoomable");
+
+            imgEl.addEventListener("dblclick", () => {
+                imgEl.classList.toggle("zoomed");
+            });
+
+            wrapper.appendChild(imgEl);
+            galleryDiv.appendChild(wrapper);
+        });
+    } catch (e) {
+        console.error("Error fetching gallery:", e);
+    }
+}
+
+// Refresh gallery every 3s
+setInterval(fetchGallery, 3000);
+fetchGallery();
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Zoom support
+    document.querySelectorAll(".zoomable").forEach(img => {
+        img.addEventListener("dblclick", () => {
+            img.classList.toggle("zoomed");
+        });
+    });
+
+    // Handle form submit with loading state and button disable
+    const form = document.getElementById("generate-form");
+    const loadingDiv = document.getElementById("loading");
+    const latestImage = document.getElementById("latest-image");
+    const resultImage = document.getElementById("result-image");
+    const generateButton = form.querySelector("button[type='submit']");
+    const promptInput = document.getElementById("prompt");
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const prompt = promptInput.value.trim();
+        if (!prompt) return;
+
+        // Disable button + show loading
+        generateButton.disabled = true;
+        generateButton.classList.add("opacity-50", "cursor-not-allowed");
+        loadingDiv.classList.remove("hidden");
+        latestImage.classList.add("hidden");
+
+        try {
+            const response = await fetch("/", {
+                method: "POST",
+                body: new URLSearchParams({ prompt })
+            });
+
+            const html = await response.text();
+
+            // Parse returned HTML to extract image URL
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+            const newImg = doc.querySelector("img[alt='Generated Image']");
+
+            if (newImg) {
+                resultImage.src = newImg.src;
+                latestImage.classList.remove("hidden");
+            }
+
+            // ✅ Clear the input after successful generation
+            promptInput.value = "";
+
+        } catch (err) {
+            console.error("Error generating image:", err);
+        } finally {
+            // Re-enable button + hide loading
+            generateButton.disabled = false;
+            generateButton.classList.remove("opacity-50", "cursor-not-allowed");
+            loadingDiv.classList.add("hidden");
+            fetchGallery();
+        }
+    });
+});
+</script>
