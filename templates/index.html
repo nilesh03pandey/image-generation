@@ -43,7 +43,12 @@
                 <label for="prompt" class="block text-sm font-medium">Enter Prompt:</label>
                 <textarea id="prompt" name="prompt" rows="4"
                         class="mt-1 w-full p-3 rounded-md bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 text-lg"
-                        placeholder="enter your prompt...">{{ prompt }}</textarea>
+                        placeholder="enter your prompt...">{{ prompt }}
+                </textarea>
+                <textarea id="system_prompt" name="system_prompt" rows="4"
+                        class="mt-1 w-full p-3 rounded-md bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 text-lg"
+                        placeholder="change deafult system prompt...">{{ prompt }}
+                </textarea>
             </div>
             <button type="submit"
                     class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md transition duration-300">
