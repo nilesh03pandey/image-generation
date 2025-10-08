@@ -66,7 +66,7 @@
 <li class="break-words">If generation is slow, confirm that the GPU is being utilized (check console for device debug logs).</li>
 </ul>
 
-#Example
+<h2 dir="auto" class="text-2xl mt-[1.5em]">View</h2>
 <img width="1920" height="1080" alt="Screenshot from 2025-10-08 23-58-30" src="https://github.com/user-attachments/assets/079f55e1-6dc3-403e-ad7c-c6593458960a" />
 
 
