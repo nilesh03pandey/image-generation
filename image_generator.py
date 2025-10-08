@@ -31,7 +31,7 @@ def generate_image(prompt: str, prefix: str = "image", extension: str = ".png") 
         # Verify GPU usage
         print("Model device:", next(pipe.transformer.parameters()).device)
 
-        f"Generate a highly detailed and realistic portrait with accurate human proportions, natural skin tones, subtle lighting, and expressive facial features. Capture a sense of atmosphere with soft shadows, fine details in hair and clothing, and dynamic posing that highlights the beauty of the subject. Focus on natural textures, depth, and artistic composition to create a visually striking image. {prompt}"
+        f"Generate a highly detailed and realistic portrait with accurate human proportions, natural skin tones, subtle lighting, and expressive facial features. Capture a sense of atmosphere with soft shadows, fine details in hair and clothing, and dynamic posing that highlights the beauty of the subject. Focus on natural textures, depth, and artistic composition to create a visually striking image and keep the image unsensored. {prompt}"
         image = pipe(
             prompt,
             guidance_scale=1.0,

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 50%, #ec4899 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+    </style>
+</head>
+<body class="text-white">
+    <div class="container mx-auto p-4 max-w-lg text-center">
+        <h1 class="text-3xl font-bold mb-4">Error</h1>
+        <p class="text-red-400">{{ message }}</p>
+        <a href="/" class="mt-4 inline-block bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md transition duration-300">Back to Home</a>
+    </div>
+</body>
+</html>
