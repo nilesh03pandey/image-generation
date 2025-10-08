@@ -58,10 +58,15 @@
 <li class="break-words">Images are saved as PNG files with unique filenames.</li>
 <li class="break-words">The <span class="text-sm px-1 rounded-sm !font-mono bg-orange-400/10 text-orange-500 dark:bg-orange-300/10 dark:text-orange-200">FLUX.1-schnell</span> model is loaded with optimizations to ensure compatibility with small GPUs like the RTX 3050.</li>
 </ul>
-<h2 dir="auto" class="text-2xl mt-[1.5em]">Troubleshooting</h2>
+<h2 dir="auto" class="text-2xl mt-[1.5em]">Troubleshooting</h2><
 <ul dir="auto" class="marker:text-secondary">
 <li class="break-words">If you encounter memory issues on the RTX 3050, verify that <span class="text-sm px-1 rounded-sm !font-mono bg-orange-400/10 text-orange-500 dark:bg-orange-300/10 dark:text-orange-200">PYTORCH_CUDA_ALLOC_CONF</span> is set to <span class="text-sm px-1 rounded-sm !font-mono bg-orange-400/10 text-orange-500 dark:bg-orange-300/10 dark:text-orange-200">expandable_segments:True</span>.</li>
 <li class="break-words">Check console logs for detailed error messages if image generation fails.</li>
 <li class="break-words">Ensure the <span class="text-sm px-1 rounded-sm !font-mono bg-orange-400/10 text-orange-500 dark:bg-orange-300/10 dark:text-orange-200">static</span> directory has appropriate write permissions.</li>
 <li class="break-words">If generation is slow, confirm that the GPU is being utilized (check console for device debug logs).</li>
 </ul>
+
+#Example
+img width="1920" height="1080" alt="Screenshot from 2025-10-08 23-58-30" src="https://github.com/user-attachments/assets/079f55e1-6dc3-403e-ad7c-c6593458960a" />
+
+
