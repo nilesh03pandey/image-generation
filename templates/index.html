@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Image Generator</title>
+    <title>Image Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 50%, #ec4899 100%);
             min-height: 100vh;
-            font-family: 'Inter', -apple-system, sans-serif;
+            font-family: 'Arial', sans-serif;
         }
+
         .main-container {
             display: flex;
             flex-direction: column;
@@ -20,6 +20,56 @@
             min-height: 100vh;
             padding: 1rem;
         }
+
+        #gallery {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: #a78bfa #1e293b;
+        }
+
+        #gallery::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #gallery::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        #gallery::-webkit-scrollbar-thumb {
+            background: #a78bfa;
+            border-radius: 3px;
+        }
+
+        .zoomable {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            border-radius: 0.5rem;
+        }
+
+        .zoomable:hover {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .zoomed {
+            transform: scale(2);
+            z-index: 50;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .error-message {
+            animation: slideInOut 5s ease-in-out forwards;
+        }
+
+        @keyframes slideInOut {
+            0% { opacity: 0; transform: translateY(-10px); }
+            20% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-10px); }
+        }
+
         .section-card {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -29,17 +79,21 @@
             margin: 1rem 0;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
+
         .form-input {
             transition: all 0.3s ease;
         }
+
         .form-input:focus {
             transform: scale(1.02);
             box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
         }
+
         .generate-btn {
             position: relative;
             overflow: hidden;
         }
+
         .generate-btn::before {
             content: '';
             position: absolute;
@@ -50,68 +104,19 @@
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
             transition: left 0.5s;
         }
+
         .generate-btn:hover::before {
             left: 100%;
-        }
-        .error-message {
-            animation: slideInOut 5s ease-in-out forwards;
-        }
-        @keyframes slideInOut {
-            0% { opacity: 0; transform: translateY(-10px); }
-            20% { opacity: 1; transform: translateY(0); }
-            80% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-10px); }
-        }
-        .spinner {
-            border-top-color: transparent;
-        }
-        .zoom-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        .zoom-modal.active {
-            display: flex;
-        }
-        #gallery {
-            max-height: 400px;
-            overflow-y: auto;
-            padding-right: 10px;
-            scrollbar-width: thin;
-            scrollbar-color: #a78bfa #1e293b;
-        }
-        #gallery::-webkit-scrollbar {
-            width: 6px;
-        }
-        #gallery::-webkit-scrollbar-track {
-            background: #1e293b;
-        }
-        #gallery::-webkit-scrollbar-thumb {
-            background: #a78bfa;
-            border-radius: 3px;
         }
     </style>
 </head>
 <body class="text-white">
-    <!-- Zoom Modal -->
-    <div id="zoom-modal" class="zoom-modal">
-        <button onclick="closeModal()" class="absolute top-4 right-4 text-3xl text-white">&times;</button>
-        <img id="modal-image" class="max-w-[90%] max-h-[90%]">
-    </div>
-
     <div class="main-container">
         <div class="max-w-lg w-full">
             <h1 class="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">
-                <i class="fas fa-magic mr-2"></i> AI Image Generator
+                AI Image Generator
             </h1>
-
+            
             <!-- Form Section -->
             <div class="section-card">
                 <form id="generate-form" class="space-y-4">
@@ -119,54 +124,34 @@
                         <label for="prompt" class="block text-sm font-medium mb-2">Enter Your Prompt:</label>
                         <textarea id="prompt" name="prompt" rows="4"
                                 class="form-input mt-1 w-full p-3 rounded-md bg-gray-800/50 text-white border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-lg resize-none"
-                                placeholder="Describe the image you want to generate..." maxlength="512" required>{{ prompt }}</textarea>
-                        <div class="flex justify-between text-xs text-gray-300 mt-1">
-                            <span>Max 512 characters</span>
-                            <span><span id="char-count">0</span>/512</span>
-                        </div>
+                                placeholder="Describe the image you want to generate..." maxlength="512">{{ prompt }}</textarea>
+                        <p class="text-xs text-gray-300 mt-1">Max 512 characters</p>
                     </div>
-                    <div class="flex gap-3">
-                        <button type="submit"
-                                class="generate-btn flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-4 rounded-md transition duration-300">
-                            <i class="fas fa-sparkles mr-2"></i> Generate Image
-                        </button>
-                        <button type="button" id="clear-prompt" class="px-4 py-3 bg-gray-700/50 hover:bg-gray-600/50 rounded-md">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
+                    <button type="submit"
+                            class="generate-btn w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-4 rounded-md transition duration-300">
+                        Generate Image
+                    </button>
                 </form>
             </div>
 
             <!-- Loading -->
             <div id="loading" class="text-center hidden mb-4">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-purple-500 spinner"></div>
-                <p class="text-yellow-300 font-semibold mt-2">Generating image... Please wait</p>
+                <p class="text-yellow-300 font-semibold">⏳ Generating image... Please wait</p>
             </div>
 
             <!-- Error Message -->
-            <div id="error-message" class="text-red-400 text-center hidden error-message p-3 bg-red-500/20 rounded-md"></div>
+            <div id="error-message" class="text-red-400 text-center hidden error-message"></div>
 
             <!-- Latest Image Section -->
             {% if image_url %}
                 <div id="latest-image" class="section-card">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-semibold"><i class="fas fa-image mr-2"></i> Latest Image</h2>
-                        <button onclick="downloadImage('{{ image_url }}')" class="px-3 py-1 bg-green-600 hover:bg-green-700 rounded-md">
-                            <i class="fas fa-download"></i>
-                        </button>
-                    </div>
-                    <img id="result-image" src="{{ image_url }}" alt="Generated Image" class="w-full rounded-md cursor-pointer"
-                         onclick="openModal(this.src)">
+                    <h2 class="text-xl font-semibold text-center mb-4">Latest Generated Image</h2>
+                    <img id="result-image" src="{{ image_url }}" alt="Generated Image" class="w-full rounded-md shadow-lg zoomable">
                 </div>
             {% else %}
                 <div id="latest-image" class="section-card hidden">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-semibold"><i class="fas fa-image mr-2"></i> Latest Image</h2>
-                        <button id="download-latest" class="px-3 py-1 bg-green-600 hover:bg-green-700 rounded-md hidden">
-                            <i class="fas fa-download"></i>
-                        </button>
-                    </div>
-                    <img id="result-image" src="" alt="Generated Image" class="w-full rounded-md cursor-pointer">
+                    <h2 class="text-xl font-semibold text-center mb-4">Latest Generated Image</h2>
+                    <img id="result-image" src="" alt="Generated Image" class="w-full rounded-md shadow-lg zoomable">
                 </div>
             {% endif %}
 
@@ -174,25 +159,13 @@
             {% if gallery_images %}
                 <div id="gallery-container" class="section-card">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-semibold"><i class="fas fa-images mr-2"></i> Image Gallery</h2>
-                        <div class="flex gap-2">
-                            <button id="refresh-gallery" class="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded-md">
-                                <i class="fas fa-sync"></i>
-                            </button>
-                            <button id="clear-gallery" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-md">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
+                        <h2 class="text-xl font-semibold">Image Gallery</h2>
+                        <button id="refresh-gallery" class="text-sm bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-white">Refresh</button>
                     </div>
-                    <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
                         {% for img in gallery_images %}
-                            <div class="relative group">
-                                <img src="{{ img }}" alt="Gallery Image" class="w-full rounded-md cursor-pointer"
-                                     onclick="openModal(this.src)">
-                                <button onclick="downloadImage('{{ img }}')"
-                                        class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-green-600 hover:bg-green-700 p-2 rounded-full transition-opacity">
-                                    <i class="fas fa-download text-sm"></i>
-                                </button>
+                            <div class="relative">
+                                <img src="{{ img }}" alt="Gallery Image" class="w-full rounded-md shadow-lg zoomable">
                             </div>
                         {% endfor %}
                     </div>
@@ -200,26 +173,17 @@
             {% else %}
                 <div id="gallery-container" class="section-card hidden">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-semibold"><i class="fas fa-images mr-2"></i> Image Gallery</h2>
-                        <div class="flex gap-2">
-                            <button id="refresh-gallery" class="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded-md">
-                                <i class="fas fa-sync"></i>
-                            </button>
-                            <button id="clear-gallery" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-md">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
+                        <h2 class="text-xl font-semibold">Image Gallery</h2>
+                        <button id="refresh-gallery" class="text-sm bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-white">Refresh</button>
                     </div>
-                    <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+                    <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-96 overflow-y-auto"></div>
                 </div>
             {% endif %}
         </div>
     </div>
 
-
-
     <script>
-        // Debounce utility
+        // Debounce utility to prevent multiple rapid submissions
         function debounce(func, wait) {
             let timeout;
             return function executedFunction(...args) {
@@ -232,27 +196,6 @@
             };
         }
 
-        // Modal functions
-        function openModal(src) {
-            document.getElementById('modal-image').src = src;
-            document.getElementById('zoom-modal').classList.add('active');
-        }
-        function closeModal() {
-            document.getElementById('zoom-modal').classList.remove('active');
-        }
-        window.onclick = (e) => {
-            if (e.target.id === 'zoom-modal') closeModal();
-        }
-
-        // Download function
-        function downloadImage(url) {
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'generated-image.png';
-            a.click();
-        }
-
-        // Gallery fetch
         async function fetchGallery() {
             try {
                 const response = await fetch("/gallery", {
@@ -269,22 +212,16 @@
                     galleryContainer.classList.remove("hidden");
                     data.images.forEach(img => {
                         const wrapper = document.createElement("div");
-                        wrapper.classList.add("relative", "group");
+                        wrapper.classList.add("relative");
 
                         const imgEl = document.createElement("img");
                         imgEl.src = img;
                         imgEl.alt = "Gallery Image";
-                        imgEl.classList.add("w-full", "rounded-md", "cursor-pointer");
-                        imgEl.onclick = () => openModal(img);
+                        imgEl.classList.add("w-full", "rounded-md", "shadow-lg", "zoomable");
 
-                        const downloadBtn = document.createElement("button");
-                        downloadBtn.innerHTML = '<i class="fas fa-download text-sm"></i>';
-                        downloadBtn.classList.add("absolute", "top-2", "right-2", "opacity-0", "group-hover:opacity-100",
-                                                "bg-green-600", "hover:bg-green-700", "p-2", "rounded-full", "transition-opacity");
-                        downloadBtn.onclick = () => downloadImage(img);
+                        imgEl.addEventListener("dblclick", zoomHandler);
 
                         wrapper.appendChild(imgEl);
-                        wrapper.appendChild(downloadBtn);
                         galleryDiv.appendChild(wrapper);
                     });
                 } else {
@@ -306,53 +243,33 @@
             }, 5000);
         }
 
+        const zoomHandler = (e) => {
+            e.target.classList.toggle("zoomed");
+        };
+
         document.addEventListener("DOMContentLoaded", () => {
             const form = document.getElementById("generate-form");
             const loadingDiv = document.getElementById("loading");
             const latestImage = document.getElementById("latest-image");
             const resultImage = document.getElementById("result-image");
-            const downloadLatest = document.getElementById("download-latest");
             const generateButton = form.querySelector("button[type='submit']");
             const promptInput = document.getElementById("prompt");
             const refreshButton = document.getElementById("refresh-gallery");
-            const clearButton = document.getElementById("clear-gallery");
-            const charCount = document.getElementById("char-count");
-            const clearPrompt = document.getElementById("clear-prompt");
 
-            // Character counter
-            promptInput.addEventListener("input", () => {
-                charCount.textContent = promptInput.value.length;
-            });
-
-            // Clear prompt
-            clearPrompt.addEventListener("click", () => {
-                promptInput.value = "";
-                charCount.textContent = "0";
-            });
-
-            // Clear gallery
-            clearButton.addEventListener("click", async () => {
-                if (confirm("Clear all images in the gallery?")) {
-                    await fetch("/clear_gallery", { method: "POST" });
-                    fetchGallery();
-                    if (latestImage.querySelector("img").src) {
-                        latestImage.classList.add("hidden");
-                        downloadLatest.classList.add("hidden");
-                    }
-                }
-            });
-
-            // Initialize gallery
+            // Initialize gallery and zoom listeners
             fetchGallery();
+            document.querySelectorAll(".zoomable").forEach(img => {
+                img.addEventListener("dblclick", zoomHandler);
+            });
 
-            // Refresh button
+            // Refresh button handler
             refreshButton.addEventListener("click", fetchGallery);
 
-            // Periodic gallery refresh
+            // Periodic gallery refresh with debouncing
             const debouncedFetchGallery = debounce(fetchGallery, 1000);
-            setInterval(debouncedFetchGallery, 5000);
+            setInterval(debouncedFetchGallery, 5000);  // Increased interval to reduce load
 
-            // Form submission
+            // Form submission handler
             form.addEventListener("submit", async (e) => {
                 e.preventDefault();
 
@@ -370,7 +287,6 @@
                 generateButton.classList.add("opacity-50", "cursor-not-allowed");
                 loadingDiv.classList.remove("hidden");
                 latestImage.classList.add("hidden");
-                downloadLatest.classList.add("hidden");
 
                 try {
                     const response = await fetch("/", {
@@ -392,10 +308,9 @@
                     } else if (newImg) {
                         resultImage.src = newImg.src;
                         latestImage.classList.remove("hidden");
-                        downloadLatest.classList.remove("hidden");
-                        resultImage.onclick = () => openModal(newImg.src);
                         promptInput.value = "";
-                        charCount.textContent = "0";
+                        // Re-attach zoom listener to new image
+                        resultImage.addEventListener("dblclick", zoomHandler);
                         debouncedFetchGallery();
                     }
                 } catch (err) {
@@ -409,25 +324,5 @@
             });
         });
     </script>
-
-        <footer class="w-full mt-8 py-6 bg-gradient-to-t from-gray-900/50 to-transparent text-white">
-            <div class="container mx-auto max-w-4xl px-4 text-center">
-                <div class="section-card">
-                    <p class="text-sm md:text-base">
-                        Created with <i class="fas fa-heart text-red-400"></i> by 
-                        <span class="font-semibold">Nilesh Pandey</span>
-                    </p>
-                    <p class="text-xs md:text-sm mt-2">
-                        <a href="https://github.com/your-username/your-repo" target="_blank" 
-                        class="text-purple-300 hover:text-purple-200 transition-colors duration-200 underline">
-                            <i class="fab fa-github mr-1"></i> View Project on GitHub
-                        </a>
-                    </p>
-                    <p class="text-xs text-gray-400 mt-2">
-                        &copy; 2025 Nilesh Pandey. All rights reserved.
-                    </p>
-                </div>
-            </div>
-    </footer>
 </body>
 </html>

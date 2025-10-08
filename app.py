@@ -238,6 +238,17 @@ def gallery():
     ]
     return jsonify({"images": gallery_images[:50]})
 
+@app.route('/clear_gallery', methods=['POST'])
+def clear_gallery():
+    """Clear all images from current session."""
+    session_dir = get_session_dir()
+    for img_file in glob.glob(os.path.join(session_dir, "*.png")):
+        try:
+            os.remove(img_file)
+        except Exception as e:
+            logger.warning(f"Failed to delete {img_file}: {e}")
+    return jsonify({"success": True})
+
 @app.errorhandler(404)
 def not_found_error(error):
     logger.error(f"404 error: {str(error)}")
