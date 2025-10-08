@@ -7,190 +7,322 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            background: linear-gradient(to bottom, #1e3a8a, #7c3aed);
+            background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 50%, #ec4899 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             font-family: 'Arial', sans-serif;
         }
 
-        /* Scrollable gallery */
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
         #gallery {
             max-height: 400px;
             overflow-y: auto;
             padding-right: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: #a78bfa #1e293b;
         }
 
-        /* Smooth zoom animation */
+        #gallery::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #gallery::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        #gallery::-webkit-scrollbar-thumb {
+            background: #a78bfa;
+            border-radius: 3px;
+        }
+
         .zoomable {
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer;
+            border-radius: 0.5rem;
+        }
+
+        .zoomable:hover {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
         }
 
         .zoomed {
             transform: scale(2);
             z-index: 50;
             position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .error-message {
+            animation: slideInOut 5s ease-in-out forwards;
+        }
+
+        @keyframes slideInOut {
+            0% { opacity: 0; transform: translateY(-10px); }
+            20% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-10px); }
+        }
+
+        .section-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-input {
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+        }
+
+        .generate-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .generate-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .generate-btn:hover::before {
+            left: 100%;
         }
     </style>
 </head>
 <body class="text-white">
-    <div class="container mx-auto p-4 max-w-lg">
-        <h1 class="text-3xl font-bold text-center mb-6">Image Generator</h1>
-        <form id="generate-form" class="space-y-4">
-            <div>
-                <label for="prompt" class="block text-sm font-medium">Enter Prompt:</label>
-                <textarea id="prompt" name="prompt" rows="4"
-                        class="mt-1 w-full p-3 rounded-md bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 text-lg"
-                        placeholder="enter your prompt...">{{ prompt }}
-                </textarea>
-                <textarea id="system_prompt" name="system_prompt" rows="4"
-                        class="mt-1 w-full p-3 rounded-md bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 text-lg"
-                        placeholder="change deafult system prompt...">{{ prompt }}
-                </textarea>
+    <div class="main-container">
+        <div class="max-w-lg w-full">
+            <h1 class="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">
+                AI Image Generator
+            </h1>
+            
+            <!-- Form Section -->
+            <div class="section-card">
+                <form id="generate-form" class="space-y-4">
+                    <div>
+                        <label for="prompt" class="block text-sm font-medium mb-2">Enter Your Prompt:</label>
+                        <textarea id="prompt" name="prompt" rows="4"
+                                class="form-input mt-1 w-full p-3 rounded-md bg-gray-800/50 text-white border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-lg resize-none"
+                                placeholder="Describe the image you want to generate..." maxlength="512">{{ prompt }}</textarea>
+                        <p class="text-xs text-gray-300 mt-1">Max 512 characters</p>
+                    </div>
+                    <button type="submit"
+                            class="generate-btn w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 px-4 rounded-md transition duration-300">
+                        Generate Image
+                    </button>
+                </form>
             </div>
-            <button type="submit"
-                    class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md transition duration-300">
-                Generate Image
-            </button>
-        </form>
 
-        <div id="loading" class="mt-4 text-center hidden">
-            <p class="text-yellow-300 font-semibold">⏳ Generating...</p>
-        </div>
-
-        <div id="latest-image" class="mt-6 hidden">
-            <h2 class="text-xl font-semibold text-center">Latest Generated Image</h2>
-            <img id="result-image" src="" alt="Generated Image" class="mt-2 w-full rounded-md shadow-lg zoomable">
-        </div>
-
-        {% if error %}
-            <p class="mt-4 text-red-400 text-center">{{ error }}</p>
-        {% endif %}
-
-        {% if image_url %}
-            <div class="mt-6">
-                <h2 class="text-xl font-semibold text-center">Latest Generated Image</h2>
-                <img src="{{ image_url }}" alt="Generated Image" class="mt-2 w-full rounded-md shadow-lg zoomable">
+            <!-- Loading -->
+            <div id="loading" class="text-center hidden mb-4">
+                <p class="text-yellow-300 font-semibold">⏳ Generating image... Please wait</p>
             </div>
-        {% endif %}
 
-        {% if gallery_images %}
-            <div id="gallery-container" class="mt-8 hidden">
-                <h2 class="text-xl font-semibold text-center">Image Gallery</h2>
-                <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 max-h-96 overflow-y-auto pr-2">
-                    {% for img in gallery_images %}
-                        <div class="relative">
-                            <img src="{{ img }}" alt="Gallery Image" class="w-full rounded-md shadow-lg zoomable">
-                        </div>
-                    {% endfor %}
+            <!-- Error Message -->
+            <div id="error-message" class="text-red-400 text-center hidden error-message"></div>
+
+            <!-- Latest Image Section -->
+            {% if image_url %}
+                <div id="latest-image" class="section-card">
+                    <h2 class="text-xl font-semibold text-center mb-4">Latest Generated Image</h2>
+                    <img id="result-image" src="{{ image_url }}" alt="Generated Image" class="w-full rounded-md shadow-lg zoomable">
                 </div>
-            </div>
-        {% endif %}
+            {% else %}
+                <div id="latest-image" class="section-card hidden">
+                    <h2 class="text-xl font-semibold text-center mb-4">Latest Generated Image</h2>
+                    <img id="result-image" src="" alt="Generated Image" class="w-full rounded-md shadow-lg zoomable">
+                </div>
+            {% endif %}
+
+            <!-- Gallery Section -->
+            {% if gallery_images %}
+                <div id="gallery-container" class="section-card">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold">Image Gallery</h2>
+                        <button id="refresh-gallery" class="text-sm bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-white">Refresh</button>
+                    </div>
+                    <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                        {% for img in gallery_images %}
+                            <div class="relative">
+                                <img src="{{ img }}" alt="Gallery Image" class="w-full rounded-md shadow-lg zoomable">
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% else %}
+                <div id="gallery-container" class="section-card hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold">Image Gallery</h2>
+                        <button id="refresh-gallery" class="text-sm bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-white">Refresh</button>
+                    </div>
+                    <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-96 overflow-y-auto"></div>
+                </div>
+            {% endif %}
+        </div>
     </div>
+
+    <script>
+        // Debounce utility to prevent multiple rapid submissions
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        async function fetchGallery() {
+            try {
+                const response = await fetch("/gallery", {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+
+                const galleryContainer = document.getElementById("gallery-container");
+                const galleryDiv = document.getElementById("gallery");
+                galleryDiv.innerHTML = "";
+
+                if (data.images.length > 0) {
+                    galleryContainer.classList.remove("hidden");
+                    data.images.forEach(img => {
+                        const wrapper = document.createElement("div");
+                        wrapper.classList.add("relative");
+
+                        const imgEl = document.createElement("img");
+                        imgEl.src = img;
+                        imgEl.alt = "Gallery Image";
+                        imgEl.classList.add("w-full", "rounded-md", "shadow-lg", "zoomable");
+
+                        imgEl.addEventListener("dblclick", zoomHandler);
+
+                        wrapper.appendChild(imgEl);
+                        galleryDiv.appendChild(wrapper);
+                    });
+                } else {
+                    galleryContainer.classList.add("hidden");
+                }
+            } catch (e) {
+                console.error("Error fetching gallery:", e);
+                showError("Failed to load gallery");
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById("error-message");
+            errorDiv.textContent = message;
+            errorDiv.classList.remove("hidden");
+            setTimeout(() => {
+                errorDiv.classList.add("hidden");
+                errorDiv.textContent = "";
+            }, 5000);
+        }
+
+        const zoomHandler = (e) => {
+            e.target.classList.toggle("zoomed");
+        };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const form = document.getElementById("generate-form");
+            const loadingDiv = document.getElementById("loading");
+            const latestImage = document.getElementById("latest-image");
+            const resultImage = document.getElementById("result-image");
+            const generateButton = form.querySelector("button[type='submit']");
+            const promptInput = document.getElementById("prompt");
+            const refreshButton = document.getElementById("refresh-gallery");
+
+            // Initialize gallery and zoom listeners
+            fetchGallery();
+            document.querySelectorAll(".zoomable").forEach(img => {
+                img.addEventListener("dblclick", zoomHandler);
+            });
+
+            // Refresh button handler
+            refreshButton.addEventListener("click", fetchGallery);
+
+            // Periodic gallery refresh with debouncing
+            const debouncedFetchGallery = debounce(fetchGallery, 1000);
+            setInterval(debouncedFetchGallery, 5000);  // Increased interval to reduce load
+
+            // Form submission handler
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                const prompt = promptInput.value.trim();
+                if (!prompt) {
+                    showError("Prompt cannot be empty");
+                    return;
+                }
+                if (prompt.length > 512) {
+                    showError("Prompt is too long (max 512 characters)");
+                    return;
+                }
+
+                generateButton.disabled = true;
+                generateButton.classList.add("opacity-50", "cursor-not-allowed");
+                loadingDiv.classList.remove("hidden");
+                latestImage.classList.add("hidden");
+
+                try {
+                    const response = await fetch("/", {
+                        method: "POST",
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: new URLSearchParams({ prompt })
+                    });
+
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                    const html = await response.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, "text/html");
+                    const newImg = doc.querySelector("img[alt='Generated Image']");
+                    const errorMsg = doc.querySelector(".text-red-400");
+
+                    if (errorMsg) {
+                        showError(errorMsg.textContent);
+                    } else if (newImg) {
+                        resultImage.src = newImg.src;
+                        latestImage.classList.remove("hidden");
+                        promptInput.value = "";
+                        // Re-attach zoom listener to new image
+                        resultImage.addEventListener("dblclick", zoomHandler);
+                        debouncedFetchGallery();
+                    }
+                } catch (err) {
+                    showError("Failed to generate image");
+                    console.error("Error generating image:", err);
+                } finally {
+                    generateButton.disabled = false;
+                    generateButton.classList.remove("opacity-50", "cursor-not-allowed");
+                    loadingDiv.classList.add("hidden");
+                }
+            });
+        });
+    </script>
 </body>
 </html>
-
-
-<script>
-async function fetchGallery() {
-    try {
-        const response = await fetch("/gallery");
-        const data = await response.json();
-
-        const galleryContainer = document.getElementById("gallery-container");
-        const galleryDiv = document.getElementById("gallery");
-        galleryDiv.innerHTML = "";
-
-        if (data.images.length > 0) {
-            galleryContainer.classList.remove("hidden"); // show gallery
-        } else {
-            galleryContainer.classList.add("hidden"); // hide if empty
-        }
-
-        data.images.forEach(img => {
-            const wrapper = document.createElement("div");
-            wrapper.classList.add("relative");
-
-            const imgEl = document.createElement("img");
-            imgEl.src = img;
-            imgEl.classList.add("w-full", "rounded-md", "shadow-lg", "zoomable");
-
-            imgEl.addEventListener("dblclick", () => {
-                imgEl.classList.toggle("zoomed");
-            });
-
-            wrapper.appendChild(imgEl);
-            galleryDiv.appendChild(wrapper);
-        });
-    } catch (e) {
-        console.error("Error fetching gallery:", e);
-    }
-}
-
-// Refresh gallery every 3s
-setInterval(fetchGallery, 3000);
-fetchGallery();
-
-document.addEventListener("DOMContentLoaded", () => {
-    // Zoom support
-    document.querySelectorAll(".zoomable").forEach(img => {
-        img.addEventListener("dblclick", () => {
-            img.classList.toggle("zoomed");
-        });
-    });
-
-    // Handle form submit with loading state and button disable
-    const form = document.getElementById("generate-form");
-    const loadingDiv = document.getElementById("loading");
-    const latestImage = document.getElementById("latest-image");
-    const resultImage = document.getElementById("result-image");
-    const generateButton = form.querySelector("button[type='submit']");
-    const promptInput = document.getElementById("prompt");
-
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const prompt = promptInput.value.trim();
-        if (!prompt) return;
-
-        // Disable button + show loading
-        generateButton.disabled = true;
-        generateButton.classList.add("opacity-50", "cursor-not-allowed");
-        loadingDiv.classList.remove("hidden");
-        latestImage.classList.add("hidden");
-
-        try {
-            const response = await fetch("/", {
-                method: "POST",
-                body: new URLSearchParams({ prompt })
-            });
-
-            const html = await response.text();
-
-            // Parse returned HTML to extract image URL
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, "text/html");
-            const newImg = doc.querySelector("img[alt='Generated Image']");
-
-            if (newImg) {
-                resultImage.src = newImg.src;
-                latestImage.classList.remove("hidden");
-            }
-
-            // ✅ Clear the input after successful generation
-            promptInput.value = "";
-
-        } catch (err) {
-            console.error("Error generating image:", err);
-        } finally {
-            // Re-enable button + hide loading
-            generateButton.disabled = false;
-            generateButton.classList.remove("opacity-50", "cursor-not-allowed");
-            loadingDiv.classList.add("hidden");
-            fetchGallery();
-        }
-    });
-});
-</script>
